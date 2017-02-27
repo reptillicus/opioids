@@ -334,10 +334,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 console.log(_MapCtrl2.default);
 var app = _angular2.default.module("app", ["ui.router"]);
 
-app.config(["$stateProvider", function ($stateProvider) {
+app.config(["$stateProvider", "$locationProvider", function ($stateProvider, $locationProvider) {
+  $locationProvider.html5Mode({
+    enabled: true,
+    requireBase: false
+  });
+
   $stateProvider.state('map', {
     url: '',
-    templateUrl: '/templates/map.html',
+    templateUrl: 'templates/map.html',
     controller: 'MapCtrl as vm'
   });
 }]);
