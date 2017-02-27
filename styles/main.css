@@ -1,11 +1,11 @@
 body {
   background-color: black;
-  color: #fff;
+  color: #a5a5a5;
   font-family: 'Open Sans', sans-serif;
 }
 
 text {
-  fill: #fff;
+  fill: #a5a5a5;
 }
 
 .states {
@@ -16,9 +16,18 @@ text {
 
 .map-title {
   font-size: 1.5em;
-  fill: #d3d3d3;
+  fill: #a5a5a5;
 }
 
 #toolbar .fa {
   cursor: pointer;
+}
+
+#toolbar #info {
+  float: right;
+}
+
+#info a {
+  text-decoration: none;
+  color: #a5a5a5;
 }
