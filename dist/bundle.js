@@ -208,6 +208,7 @@ var CountyMap = function () {
 
     _classCallCheck(this, CountyMap);
 
+    var self = this;
     this.element_id = element_id;
     this.svg = d3.select(element_id);
     this.width = parseInt(this.svg.style("width"), 10);
@@ -215,7 +216,7 @@ var CountyMap = function () {
     this.colors = ["rgb(0, 0, 255)", "rgb(23, 0, 232)", "rgb(46, 0, 209)", "rgb(70, 0, 185)", "rgb(93, 0, 162)", "rgb(116, 0, 139)", "rgb(139, 0, 116)", "rgb(162, 0, 93)", "rgb(185, 0, 70)", "rgb(209, 0, 46)", "rgb(232, 0, 23)"];
     this.categories = ["0-2", "2.1-4", "4.1-6", "6.1-8", "8.1-10", "10.1-12", "12.1-14", "14.1-16", "16.1-18", "18.1-20", ">20"];
 
-    this.unemployment = d3.map();
+    this.rates = d3.map();
 
     this.path = d3.geoPath();
 
@@ -258,14 +259,28 @@ var CountyMap = function () {
       this.title.selectAll('.map-title').remove();
       this.title.append("text").attr('class', 'map-title').text(data.key);
       this.county_values.forEach(function (d) {
-        _this2.unemployment.set(d.FIPS, d.death_rate);
+        _this2.rates.set(d.FIPS, d);
       });
       this.svg.selectAll('.counties').remove();
 
       this.svg.append("g").attr("class", "counties").selectAll("path").data(topojson.feature(this.counties, this.counties.objects.counties).features).enter().append("path").attr("fill", function (d) {
-        d.rate = _this2.unemployment.get(d.id);
-        return _this2.fill_function(d);
-      }).attr("d", this.path);
+        d = _this2.rates.get(d.id);
+        if (d) {
+          return _this2.fill_function(d);
+        } else {
+          return "black";
+        }
+      }).attr("d", this.path).on('mouseover', function (d, i, nodes) {
+        var county = _this2.rates.get(d.id);
+        console.log(county);
+        console.log(d3.mouse(d3.event.currentTarget));
+        var xPosition = d3.mouse(d3.event.currentTarget)[0];
+        var yPosition = d3.mouse(d3.event.currentTarget)[1] - 30;
+        //
+        _this2.svg.append("text").attr("class", "tooltip").attr("x", xPosition).attr("y", yPosition).attr("text-anchor", "middle").attr("font-family", "sans-serif").attr("font-size", "11px").attr("font-weight", "bold").attr("fill", "black").text(county.County);
+      }).on('mouseout', function (d) {
+        d3.select(".tooltip").remove();
+      });
     }
   }, {
     key: 'fill_function',
@@ -283,20 +298,16 @@ var CountyMap = function () {
         "18.1-20": "rgb(209, 0, 46)",
         ">20": "rgb(232, 0, 23)"
       };
-      return classes[d.rate];
+      return classes[d.death_rate];
     }
   }, {
     key: 'draw',
     value: function draw(data) {
       console.log(data);
       this.counties = data;
-      this.svg.append("g").attr("class", "counties").selectAll("path").data(topojson.feature(data, data.objects.counties).features).enter().append("path")
-      // .attr("fill", function(d) { return color(d.rat = unemployment.get(d.id)); })
-      .attr("d", this.path);
-      // .append("title")
-      //   .text(function(d) { return d.rate + "%"; });
-
-      //
+      this.svg.append("g").attr("class", "counties").selectAll("path").data(topojson.feature(data, data.objects.counties).features).enter().append("path").attr("d", this.path).attr("id", function (d) {
+        return 'county_' + d.id;
+      });
       this.svg.append("path").datum(topojson.mesh(data, data.objects.states, function (a, b) {
         return a !== b;
       })).attr("class", "states").attr("d", this.path);

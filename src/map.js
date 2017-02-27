@@ -5,6 +5,7 @@ console.log(topojson)
 export default class CountyMap {
 
   constructor (element_id) {
+    var self = this;
     this.element_id = element_id;
     this.svg = d3.select(element_id);
     this.width = parseInt(this.svg.style("width"), 10);
@@ -36,7 +37,7 @@ export default class CountyMap {
       ">20"
     ]
 
-    this.unemployment = d3.map();
+    this.rates = d3.map();
 
     this.path = d3.geoPath();
 
@@ -97,7 +98,7 @@ export default class CountyMap {
     this.title.append("text")
       .attr('class', 'map-title').text(data.key);
     this.county_values.forEach( (d) => {
-      this.unemployment.set(d.FIPS, d.death_rate);
+      this.rates.set(d.FIPS, d);
     })
     this.svg.selectAll('.counties').remove()
 
@@ -107,10 +108,35 @@ export default class CountyMap {
       .data(topojson.feature(this.counties, this.counties.objects.counties).features)
       .enter().append("path")
         .attr("fill", (d) => {
-          d.rate = this.unemployment.get(d.id)
-          return this.fill_function(d)
+          d = this.rates.get(d.id)
+          if (d) {
+            return this.fill_function(d)
+          } else {
+            return "black";
+          }
         })
         .attr("d", this.path)
+        .on('mouseover', (d, i, nodes) => {
+          let county = this.rates.get(d.id);
+          console.log(county)
+          console.log(d3.mouse(d3.event.currentTarget))
+          let xPosition = d3.mouse(d3.event.currentTarget)[0];
+          let yPosition = d3.mouse(d3.event.currentTarget)[1] - 30;
+          //
+          this.svg.append("text")
+            .attr("class", "tooltip")
+            .attr("x", xPosition)
+            .attr("y", yPosition)
+            .attr("text-anchor", "middle")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "11px")
+            .attr("font-weight", "bold")
+            .attr("fill", "black")
+            .text(county.County);
+        })
+        .on('mouseout', (d) => {
+          d3.select(".tooltip").remove();
+        })
   }
 
   fill_function (d) {
@@ -127,7 +153,7 @@ export default class CountyMap {
       "18.1-20":      "rgb(209, 0, 46)",
       ">20":        "rgb(232, 0, 23)"
     }
-    return classes[d.rate];
+    return classes[d.death_rate];
   }
 
   draw (data) {
@@ -138,12 +164,8 @@ export default class CountyMap {
       .selectAll("path")
       .data(topojson.feature(data, data.objects.counties).features)
       .enter().append("path")
-        // .attr("fill", function(d) { return color(d.rat = unemployment.get(d.id)); })
         .attr("d", this.path)
-      // .append("title")
-      //   .text(function(d) { return d.rate + "%"; });
-
-    //
+        .attr("id", (d) => { return 'county_' + d.id})
     this.svg.append("path")
         .datum(topojson.mesh(data, data.objects.states, (a, b) => { return a !== b; }))
         .attr("class", "states")
