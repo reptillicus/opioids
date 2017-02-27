@@ -8,7 +8,7 @@ app.config(function ($stateProvider) {
   $stateProvider
     .state('map', {
       url: '',
-      templateUrl: '/templates/map.html',
+      templateUrl: 'templates/map.html',
       controller: 'MapCtrl as vm'
     })
 })
