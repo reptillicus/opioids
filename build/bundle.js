@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -74,6 +74,12 @@ module.exports = angular;
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports) {
+
+module.exports = d3;
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -89,29 +95,79 @@ var _angular = __webpack_require__(0);
 
 var _angular2 = _interopRequireDefault(_angular);
 
-var _map = __webpack_require__(2);
+var _d = __webpack_require__(1);
+
+var d3 = _interopRequireWildcard(_d);
+
+var _map = __webpack_require__(3);
 
 var _map2 = _interopRequireDefault(_map);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var MapCtrl = function () {
-  function MapCtrl($http, $timeout, $window) {
+  function MapCtrl($http, $interval, $window) {
+    var _this = this;
+
     _classCallCheck(this, MapCtrl);
 
     console.log(this);
     this.$http = $http;
-    this.$timeout = $timeout;
+    this.$interval = $interval;
     this.$window = $window;
+    this.timestep = 0;
 
     this.map = new _map2.default('#map');
+    this.loading = true;
+
+    this.$http.get('https://d3js.org/us-10m.v1.json').then(function (resp) {
+      _this.map.draw(resp.data);
+    }).then(function () {
+      d3.csv('./assets/data.csv').row(function (d) {
+        d["death_rate"] = d["Estimated Age-adjusted Death Rate, 11 Categories (in ranges)"];
+        return d;
+      }).get(function (data) {
+        var nested = d3.nest().key(function (d) {
+          return +d.Year;
+        }).entries(data);
+        _this.nested_data = nested;
+        _this.start_animation();
+        _this.loading = false;
+      });
+    });
   }
 
   _createClass(MapCtrl, [{
-    key: 'update_data',
-    value: function update_data() {}
+    key: "stop_animation",
+    value: function stop_animation() {
+      this.$interval.cancel(this.interval_promise);
+      this.play = false;
+    }
+  }, {
+    key: "start_animation",
+    value: function start_animation() {
+      var _this2 = this;
+
+      this.stop_animation();
+      this.play = true;
+      this.interval_promise = this.$interval(function () {
+        _this2.map.set_county_values(_this2.nested_data[_this2.timestep]);
+        _this2.timestep++;
+        if (_this2.timestep >= _this2.nested_data.length) {
+          _this2.timestep = 0;
+        }
+      }, 1000);
+    }
+  }, {
+    key: "toggle_play",
+    value: function toggle_play() {
+      console.log("toggle");
+      this.play ? this.stop_animation() : this.start_animation();
+    }
   }]);
 
   return MapCtrl;
@@ -120,167 +176,146 @@ var MapCtrl = function () {
 exports.default = MapCtrl;
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _angular = __webpack_require__(0);
+var _d = __webpack_require__(1);
 
-var _angular2 = _interopRequireDefault(_angular);
+var d3 = _interopRequireWildcard(_d);
 
-var _d = __webpack_require__(3);
+var _topojson = __webpack_require__(4);
 
-var _d2 = _interopRequireDefault(_d);
+var topojson = _interopRequireWildcard(_topojson);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-console.log(_angular2.default, _d2.default);
+console.log(topojson);
 
 var CountyMap = function () {
-    function CountyMap(element_id) {
-        _classCallCheck(this, CountyMap);
+  function CountyMap(element_id) {
+    var _this = this;
 
-        this.element_id = element_id;
-        console.log(this.element_id, _d2.default);
-        var svg = _d2.default.select(element_id),
-            width = +svg.attr("width"),
-            height = +svg.attr("height");
+    _classCallCheck(this, CountyMap);
 
-        var unemployment = _d2.default.map();
+    this.element_id = element_id;
+    this.svg = d3.select(element_id);
+    this.width = parseInt(this.svg.style("width"), 10);
+    this.height = parseInt(this.svg.style("height"), 10);
+    this.colors = ["rgb(0, 0, 255)", "rgb(23, 0, 232)", "rgb(46, 0, 209)", "rgb(70, 0, 185)", "rgb(93, 0, 162)", "rgb(116, 0, 139)", "rgb(139, 0, 116)", "rgb(162, 0, 93)", "rgb(185, 0, 70)", "rgb(209, 0, 46)", "rgb(232, 0, 23)"];
+    this.categories = ["0-2", "2.1-4", "4.1-6", "6.1-8", "8.1-10", "10.1-12", "12.1-14", "14.1-16", "16.1-18", "18.1-20", ">20"];
 
-        var path = _d2.default.geoPath();
+    this.unemployment = d3.map();
 
-        var x = _d2.default.scaleLinear().domain([1, 10]).rangeRound([600, 860]);
+    this.path = d3.geoPath();
 
-        var color = _d2.default.scaleThreshold().domain(_d2.default.range(2, 10)).range(_d2.default.schemeBlues[9]);
+    this.x = d3.scaleLinear().domain([0, 10]).rangeRound([0, 300]);
+    this.color = d3.scaleThreshold().domain(d3.range(0, 10)).range(this.colors);
 
-        var g = svg.append("g").attr("class", "key").attr("transform", "translate(0,40)");
+    this.legend = this.svg.append("g").attr("class", "key").attr("transform", "translate(" + String(this.width - 220) + ",50)");
 
-        g.selectAll("rect").data(color.range().map(function (d) {
-            d = color.invertExtent(d);
-            if (d[0] == null) d[0] = x.domain()[0];
-            if (d[1] == null) d[1] = x.domain()[1];
-            return d;
-        })).enter().append("rect").attr("height", 8).attr("x", function (d) {
-            return x(d[0]);
-        }).attr("width", function (d) {
-            return x(d[1]) - x(d[0]);
-        }).attr("fill", function (d) {
-            return color(d[0]);
-        });
+    this.bars = this.legend.selectAll(".legend-box").data(this.colors).enter().append("g");
 
-        g.append("text").attr("class", "caption").attr("x", x.range()[0]).attr("y", -6).attr("fill", "#000").attr("text-anchor", "start").attr("font-weight", "bold").text("Unemployment rate");
+    this.bars.append("rect").attr("height", 25).attr("class", "legend-box").attr("y", function (d, i) {
+      return _this.x(i);
+    }).attr("x", 0).attr("width", 25).attr("fill", function (d, i) {
+      return _this.color(i);
+    });
 
-        g.call(_d2.default.axisBottom(x).tickSize(13).tickFormat(function (x, i) {
-            return i ? x : x + "%";
-        }).tickValues(color.domain())).select(".domain").remove();
+    this.bars.append("text").attr("x", 30).attr("y", function (d, i) {
+      return _this.x(i) + 18;
+    }).text(function (d, i) {
+      return _this.categories[i];
+    });
+
+    this.legend.append("text").attr("class", "caption").attr("x", 0).attr("y", -6).attr("fill", "#000").attr("text-anchor", "start").attr("font-weight", "bold").attr("font-size", "1em").text("Death rate per 100k");
+
+    this.title = this.svg.append("g").attr("class", "map_title").attr("transform", "translate(" + String(this.width / 2) + ",30)");
+  }
+
+  _createClass(CountyMap, [{
+    key: 'element_id',
+    value: function element_id(id) {
+      this.element_id = id;
+      return this;
     }
+  }, {
+    key: 'set_county_values',
+    value: function set_county_values(data) {
+      var _this2 = this;
 
-    _createClass(CountyMap, [{
-        key: 'element_id',
-        value: function element_id(id) {
-            this.element_id = id;
-            return this;
-        }
-    }]);
+      this.county_values = data.values;
+      this.title.selectAll('.map-title').remove();
+      this.title.append("text").attr('class', 'map-title').text(data.key);
+      this.county_values.forEach(function (d) {
+        _this2.unemployment.set(d.FIPS, d.death_rate);
+      });
+      this.svg.selectAll('.counties').remove();
 
-    return CountyMap;
+      this.svg.append("g").attr("class", "counties").selectAll("path").data(topojson.feature(this.counties, this.counties.objects.counties).features).enter().append("path").attr("fill", function (d) {
+        d.rate = _this2.unemployment.get(d.id);
+        return _this2.fill_function(d);
+      }).attr("d", this.path);
+    }
+  }, {
+    key: 'fill_function',
+    value: function fill_function(d) {
+      var classes = {
+        "0-2": "rgb(0, 0, 255)",
+        "2.1-4": "rgb(23, 0, 232)",
+        "4.1-6": "rgb(46, 0, 209)",
+        "6.1-8": "rgb(70, 0, 185)",
+        "8.1-10": "rgb(93, 0, 162)",
+        "10.1-12": "rgb(116, 0, 139)",
+        "12.1-14": "rgb(139, 0, 116)",
+        "14.1-16": "rgb(162, 0, 93)",
+        "16.1-18": "rgb(185, 0, 70)",
+        "18.1-20": "rgb(209, 0, 46)",
+        ">20": "rgb(232, 0, 23)"
+      };
+      return classes[d.rate];
+    }
+  }, {
+    key: 'draw',
+    value: function draw(data) {
+      console.log(data);
+      this.counties = data;
+      this.svg.append("g").attr("class", "counties").selectAll("path").data(topojson.feature(data, data.objects.counties).features).enter().append("path")
+      // .attr("fill", function(d) { return color(d.rat = unemployment.get(d.id)); })
+      .attr("d", this.path);
+      // .append("title")
+      //   .text(function(d) { return d.rate + "%"; });
+
+      //
+      this.svg.append("path").datum(topojson.mesh(data, data.objects.states, function (a, b) {
+        return a !== b;
+      })).attr("class", "states").attr("d", this.path);
+    }
+  }]);
+
+  return CountyMap;
 }();
-
-// var svg = d3.select("svg"),
-//     width = +svg.attr("width"),
-//     height = +svg.attr("height");
-//
-// var unemployment = d3.map();
-//
-// var path = d3.geoPath();
-//
-// var x = d3.scaleLinear()
-//     .domain([1, 10])
-//     .rangeRound([600, 860]);
-//
-// var color = d3.scaleThreshold()
-//     .domain(d3.range(2, 10))
-//     .range(d3.schemeBlues[9]);
-//
-// var g = svg.append("g")
-//     .attr("class", "key")
-//     .attr("transform", "translate(0,40)");
-//
-// g.selectAll("rect")
-//   .data(color.range().map(function(d) {
-//       d = color.invertExtent(d);
-//       if (d[0] == null) d[0] = x.domain()[0];
-//       if (d[1] == null) d[1] = x.domain()[1];
-//       return d;
-//     }))
-//   .enter().append("rect")
-//     .attr("height", 8)
-//     .attr("x", function(d) { return x(d[0]); })
-//     .attr("width", function(d) { return x(d[1]) - x(d[0]); })
-//     .attr("fill", function(d) { return color(d[0]); });
-//
-// g.append("text")
-//     .attr("class", "caption")
-//     .attr("x", x.range()[0])
-//     .attr("y", -6)
-//     .attr("fill", "#000")
-//     .attr("text-anchor", "start")
-//     .attr("font-weight", "bold")
-//     .text("Unemployment rate");
-//
-// g.call(d3.axisBottom(x)
-//     .tickSize(13)
-//     .tickFormat(function(x, i) { return i ? x : x + "%"; })
-//     .tickValues(color.domain()))
-//   .select(".domain")
-//     .remove();
-//
-// d3.queue()
-//     .defer(d3.json, "https://d3js.org/us-10m.v1.json")
-//     .defer(d3.tsv, "unemployment.tsv", function(d) { unemployment.set(d.id, +d.rate); })
-//     .await(ready);
-//
-// function ready(error, us) {
-//   if (error) throw error;
-//
-//   svg.append("g")
-//       .attr("class", "counties")
-//     .selectAll("path")
-//     .data(topojson.feature(us, us.objects.counties).features)
-//     .enter().append("path")
-//       .attr("fill", function(d) { return color(d.rate = unemployment.get(d.id)); })
-//       .attr("d", path)
-//     .append("title")
-//       .text(function(d) { return d.rate + "%"; });
-//
-//   svg.append("path")
-//       .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
-//       .attr("class", "states")
-//       .attr("d", path);
-// }
-
 
 exports.default = CountyMap;
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports) {
 
-module.exports = d3;
+module.exports = topojson;
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -290,7 +325,7 @@ var _angular = __webpack_require__(0);
 
 var _angular2 = _interopRequireDefault(_angular);
 
-var _MapCtrl = __webpack_require__(1);
+var _MapCtrl = __webpack_require__(2);
 
 var _MapCtrl2 = _interopRequireDefault(_MapCtrl);
 
