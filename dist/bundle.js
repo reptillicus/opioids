@@ -335,10 +335,6 @@ console.log(_MapCtrl2.default);
 var app = _angular2.default.module("app", ["ui.router"]);
 
 app.config(["$stateProvider", "$locationProvider", function ($stateProvider, $locationProvider) {
-  $locationProvider.html5Mode({
-    enabled: true,
-    requireBase: false
-  });
 
   $stateProvider.state('map', {
     url: '',
