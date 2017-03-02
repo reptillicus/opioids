@@ -200,19 +200,17 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-console.log(topojson);
-
 var CountyMap = function () {
   function CountyMap(element_id) {
     var _this = this;
 
     _classCallCheck(this, CountyMap);
 
-    var self = this;
     this.element_id = element_id;
     this.svg = d3.select(element_id);
     this.width = parseInt(this.svg.style("width"), 10);
     this.height = parseInt(this.svg.style("height"), 10);
+    this.centered = null;
     this.colors = ["rgb(0, 0, 255)", "rgb(23, 0, 232)", "rgb(46, 0, 209)", "rgb(70, 0, 185)", "rgb(93, 0, 162)", "rgb(116, 0, 139)", "rgb(139, 0, 116)", "rgb(162, 0, 93)", "rgb(185, 0, 70)", "rgb(209, 0, 46)", "rgb(232, 0, 23)"];
     this.categories = ["0-2", "2.1-4", "4.1-6", "6.1-8", "8.1-10", "10.1-12", "12.1-14", "14.1-16", "16.1-18", "18.1-20", ">20"];
 
@@ -242,6 +240,8 @@ var CountyMap = function () {
     this.legend.append("text").attr("class", "caption").attr("x", 0).attr("y", -6).attr("fill", "#000").attr("text-anchor", "start").attr("font-weight", "bold").attr("font-size", "1em").text("Death rate per 100k");
 
     this.title = this.svg.append("g").attr("class", "map_title").attr("transform", "translate(" + String(this.width / 2) + ",30)");
+
+    this.map = this.svg.append("g").attr('class', "map-container");
   }
 
   _createClass(CountyMap, [{
@@ -261,26 +261,37 @@ var CountyMap = function () {
       this.county_values.forEach(function (d) {
         _this2.rates.set(d.FIPS, d);
       });
-      this.svg.selectAll('.counties').remove();
+      this.map.selectAll('.counties').remove();
 
-      this.svg.append("g").attr("class", "counties").selectAll("path").data(topojson.feature(this.counties, this.counties.objects.counties).features).enter().append("path").attr("fill", function (d) {
+      this.map.append("g").attr("class", "counties").selectAll("path").data(topojson.feature(this.counties, this.counties.objects.counties).features).enter().append("path").attr("fill", function (d) {
         d = _this2.rates.get(d.id);
         if (d) {
           return _this2.fill_function(d);
         } else {
           return "black";
         }
-      }).attr("d", this.path).on('mouseover', function (d, i, nodes) {
-        var county = _this2.rates.get(d.id);
-        console.log(county);
-        console.log(d3.mouse(d3.event.currentTarget));
-        var xPosition = d3.mouse(d3.event.currentTarget)[0];
-        var yPosition = d3.mouse(d3.event.currentTarget)[1] - 30;
-        //
-        _this2.svg.append("text").attr("class", "tooltip").attr("x", xPosition).attr("y", yPosition).attr("text-anchor", "middle").attr("font-family", "sans-serif").attr("font-size", "11px").attr("font-weight", "bold").attr("fill", "black").text(county.County);
-      }).on('mouseout', function (d) {
-        d3.select(".tooltip").remove();
-      });
+      }).attr("d", this.path).on('click', function (d) {});
+    }
+  }, {
+    key: 'click',
+    value: function click(d, node) {
+      var x, y, k;
+      if (d && this.centered !== d) {
+        console.log(this.centered);
+        var centroid = node.path.centroid(d);
+        x = centroid[0];
+        y = centroid[1];
+        k = 4;
+        this.centered = d;
+      } else {
+        x = this.width / 2;
+        y = this.height / 2;
+        k = 1;
+        this.centered = null;
+        console.log(this.centered);
+      }
+
+      this.map.transition().duration(750).attr("transform", "translate(" + this.width / 2 + "," + this.height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")").style("stroke-width", 1.5 / k + "px");
     }
   }, {
     key: 'fill_function',
@@ -305,10 +316,10 @@ var CountyMap = function () {
     value: function draw(data) {
       console.log(data);
       this.counties = data;
-      this.svg.append("g").attr("class", "counties").selectAll("path").data(topojson.feature(data, data.objects.counties).features).enter().append("path").attr("d", this.path).attr("id", function (d) {
+      this.map.append("g").attr("class", "states").selectAll("path").data(topojson.feature(data, data.objects.counties).features).enter().append("path").attr("d", this.path).attr("id", function (d) {
         return 'county_' + d.id;
       });
-      this.svg.append("path").datum(topojson.mesh(data, data.objects.states, function (a, b) {
+      this.map.append("path").datum(topojson.mesh(data, data.objects.states, function (a, b) {
         return a !== b;
       })).attr("class", "states").attr("d", this.path);
     }

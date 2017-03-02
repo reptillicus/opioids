@@ -1,15 +1,14 @@
 import * as d3 from 'd3';
 import * as topojson from 'topojson';
 
-console.log(topojson)
 export default class CountyMap {
 
   constructor (element_id) {
-    var self = this;
     this.element_id = element_id;
     this.svg = d3.select(element_id);
     this.width = parseInt(this.svg.style("width"), 10);
     this.height = parseInt(this.svg.style("height"), 10);
+    this.centered = null;
     this.colors = [
       "rgb(0, 0, 255)",
       "rgb(23, 0, 232)",
@@ -84,6 +83,8 @@ export default class CountyMap {
         .attr("class", "map_title")
         .attr("transform", "translate(" + String(this.width/2)+ ",30)");
 
+    this.map = this.svg.append("g")
+      .attr('class', "map-container");
 
   }
 
@@ -100,12 +101,12 @@ export default class CountyMap {
     this.county_values.forEach( (d) => {
       this.rates.set(d.FIPS, d);
     })
-    this.svg.selectAll('.counties').remove()
+    this.map.selectAll('.counties').remove()
 
-    this.svg.append("g")
-        .attr("class", "counties")
+    this.map.append("g")
+      .attr("class", "counties")
       .selectAll("path")
-      .data(topojson.feature(this.counties, this.counties.objects.counties).features)
+    .data(topojson.feature(this.counties, this.counties.objects.counties).features)
       .enter().append("path")
         .attr("fill", (d) => {
           d = this.rates.get(d.id)
@@ -116,27 +117,31 @@ export default class CountyMap {
           }
         })
         .attr("d", this.path)
-        .on('mouseover', (d, i, nodes) => {
-          let county = this.rates.get(d.id);
-          console.log(county)
-          console.log(d3.mouse(d3.event.currentTarget))
-          let xPosition = d3.mouse(d3.event.currentTarget)[0];
-          let yPosition = d3.mouse(d3.event.currentTarget)[1] - 30;
-          //
-          this.svg.append("text")
-            .attr("class", "tooltip")
-            .attr("x", xPosition)
-            .attr("y", yPosition)
-            .attr("text-anchor", "middle")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", "11px")
-            .attr("font-weight", "bold")
-            .attr("fill", "black")
-            .text(county.County);
-        })
-        .on('mouseout', (d) => {
-          d3.select(".tooltip").remove();
-        })
+        .on('click', (d) => {});
+
+  }
+
+  click (d, node) {
+    var x, y, k;
+    if (d && this.centered !== d) {
+      console.log(this.centered)
+      var centroid = node.path.centroid(d);
+      x = centroid[0];
+      y = centroid[1];
+      k = 4;
+      this.centered = d;
+    } else {
+      x = this.width / 2;
+      y = this.height / 2;
+      k = 1;
+      this.centered = null;
+      console.log(this.centered)
+    }
+
+    this.map.transition()
+      .duration(750)
+      .attr("transform", "translate(" + this.width / 2 + "," + this.height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+      .style("stroke-width", 1.5 / k + "px");
   }
 
   fill_function (d) {
@@ -159,17 +164,18 @@ export default class CountyMap {
   draw (data) {
     console.log(data)
     this.counties = data;
-    this.svg.append("g")
-        .attr("class", "counties")
+    this.map.append("g")
+        .attr("class", "states")
       .selectAll("path")
       .data(topojson.feature(data, data.objects.counties).features)
       .enter().append("path")
         .attr("d", this.path)
         .attr("id", (d) => { return 'county_' + d.id})
-    this.svg.append("path")
+    this.map.append("path")
         .datum(topojson.mesh(data, data.objects.states, (a, b) => { return a !== b; }))
         .attr("class", "states")
         .attr("d", this.path);
+
   }
 
 }
