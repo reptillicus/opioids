@@ -23,18 +23,26 @@ export default class CountyMap {
        "rgb(232, 0, 23)"
      ]
     this.categories = [
-      "0-2",
-      "2.1-4",
-      "4.1-6",
-      "6.1-8",
-      "8.1-10",
-      "10.1-12",
-      "12.1-14",
-      "14.1-16",
-      "16.1-18",
+      ">20",
       "18.1-20",
-      ">20"
+      "16.1-18",
+      "14.1-16",
+      "12.1-14",
+      "10.1-12",
+      "8.1-10",
+      "6.1-8",
+      "4.1-6",
+      "2.1-4",
+      "0-2",
     ]
+
+    window.addEventListener('resize',()=> {
+      console.log("resize");
+      this.width = parseInt(this.svg.style("width"), 10);
+      this.height = parseInt(this.svg.style("height"), 10);
+      console.log(this.width)
+      this.draw(this.counties);
+    })
 
     this.rates = d3.map();
 
@@ -45,11 +53,15 @@ export default class CountyMap {
         .rangeRound([0, 300]);
     this.color = d3.scaleThreshold()
         .domain(d3.range(0, 10))
-        .range(this.colors);
+        .range(this.colors.reverse());
 
     this.legend = this.svg.append("g")
         .attr("class", "key")
-        .attr("transform", "translate(" + String(this.width - 220) + ",50)");
+        .attr("transform", "translate(" + this.width*0.80 +",50)");
+
+    this.chart = this.svg.append("g")
+            .attr("class", "chart")
+            .attr("transform", "translate(" + this.width*0.80 +"," + this.height-200 +')');
 
     this.bars = this.legend.selectAll(".legend-box")
       .data(this.colors)
@@ -84,7 +96,8 @@ export default class CountyMap {
         .attr("transform", "translate(" + String(this.width/2)+ ",30)");
 
     this.map = this.svg.append("g")
-      .attr('class', "map-container");
+      .attr('class', "map-container")
+      .attr('width', this.width);
 
   }
 
@@ -117,12 +130,13 @@ export default class CountyMap {
           }
         })
         .attr("d", this.path)
-        .on('click', (d) => {});
+        .on('click', this.click);
 
   }
 
   click (d, node) {
     var x, y, k;
+    console.log(d, node)
     if (d && this.centered !== d) {
       console.log(this.centered)
       var centroid = node.path.centroid(d);

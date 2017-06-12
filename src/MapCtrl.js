@@ -5,7 +5,6 @@ import CountyMap from './map';
 export default class MapCtrl {
 
   constructor($http, $interval, $window) {
-    console.log(this);
     this.$http = $http;
     this.$interval = $interval;
     this.$window = $window;
@@ -27,6 +26,7 @@ export default class MapCtrl {
             .key((d) => {return +d.Year})
             .entries(data);
           this.nested_data = nested;
+          console.log(this.nested_data)
           this.start_animation();
           this.loading = false;
         });
