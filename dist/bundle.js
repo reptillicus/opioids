@@ -214,13 +214,13 @@ var CountyMap = function () {
     this.colors = ["rgb(0, 0, 255)", "rgb(23, 0, 232)", "rgb(46, 0, 209)", "rgb(70, 0, 185)", "rgb(93, 0, 162)", "rgb(116, 0, 139)", "rgb(139, 0, 116)", "rgb(162, 0, 93)", "rgb(185, 0, 70)", "rgb(209, 0, 46)", "rgb(232, 0, 23)"];
     this.categories = [">20", "18.1-20", "16.1-18", "14.1-16", "12.1-14", "10.1-12", "8.1-10", "6.1-8", "4.1-6", "2.1-4", "0-2"];
 
-    window.addEventListener('resize', function () {
-      console.log("resize");
-      _this.width = parseInt(_this.svg.style("width"), 10);
-      _this.height = parseInt(_this.svg.style("height"), 10);
-      console.log(_this.width);
-      _this.draw(_this.counties);
-    });
+    // window.addEventListener('resize',()=> {
+    //   console.log("resize");
+    //   this.width = parseInt(this.svg.style("width"), 10);
+    //   this.height = parseInt(this.svg.style("height"), 10);
+    //   console.log(this.width)
+    //   this.draw(this.counties);
+    // })
 
     this.rates = d3.map();
 

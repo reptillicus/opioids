@@ -36,13 +36,13 @@ export default class CountyMap {
       "0-2",
     ]
 
-    window.addEventListener('resize',()=> {
-      console.log("resize");
-      this.width = parseInt(this.svg.style("width"), 10);
-      this.height = parseInt(this.svg.style("height"), 10);
-      console.log(this.width)
-      this.draw(this.counties);
-    })
+    // window.addEventListener('resize',()=> {
+    //   console.log("resize");
+    //   this.width = parseInt(this.svg.style("width"), 10);
+    //   this.height = parseInt(this.svg.style("height"), 10);
+    //   console.log(this.width)
+    //   this.draw(this.counties);
+    // })
 
     this.rates = d3.map();
 
