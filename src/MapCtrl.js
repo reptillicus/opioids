@@ -4,10 +4,11 @@ import CountyMap from './map';
 
 export default class MapCtrl {
 
-  constructor($http, $interval, $window) {
+  constructor($http, $interval, $window, $scope) {
     this.$http = $http;
     this.$interval = $interval;
     this.$window = $window;
+    this.$scope = $scope;
     this.timestep = 0;
 
     this.map = new CountyMap('#map');
@@ -48,6 +49,7 @@ export default class MapCtrl {
     });
     console.log(found);
     this.county_by_year = found;
+    this.$scope.$apply();
   }
 
   stop_animation () {

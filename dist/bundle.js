@@ -110,7 +110,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var MapCtrl = function () {
-  function MapCtrl($http, $interval, $window) {
+  function MapCtrl($http, $interval, $window, $scope) {
     var _this = this;
 
     _classCallCheck(this, MapCtrl);
@@ -118,6 +118,7 @@ var MapCtrl = function () {
     this.$http = $http;
     this.$interval = $interval;
     this.$window = $window;
+    this.$scope = $scope;
     this.timestep = 0;
 
     this.map = new _map2.default('#map');
@@ -158,6 +159,7 @@ var MapCtrl = function () {
       });
       console.log(found);
       this.county_by_year = found;
+      this.$scope.$apply();
     }
   }, {
     key: "stop_animation",
