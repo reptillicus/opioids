@@ -36,9 +36,8 @@ export default class CountyMap {
       "0-2",
     ];
 
-    d3.select(window)
-    		.on("resize", this.resize);
-
+    // d3.select(window)
+    // 		.on("resize", this.resize);
 
     // window.addEventListener('resize',()=> {
     //   console.log("resize");
@@ -47,7 +46,7 @@ export default class CountyMap {
     //   console.log(this.width)
     //   this.draw(this.counties);
     // })
-
+    this.dispatcher = d3.dispatch("county_click", "other_event");
     this.rates = d3.map();
 
     this.projection = d3.geoAlbersUsa().scale(1000);
@@ -110,6 +109,11 @@ export default class CountyMap {
 
   }
 
+  on() {
+    let value = this.dispatcher.on.apply(this.dispatcher, arguments);
+    return value === this.dispatcher ? this : value;
+  }
+
   element_id (id) {
     this.element_id = id;
     return this;
@@ -130,46 +134,50 @@ export default class CountyMap {
       .selectAll("path")
     .data(topojson.feature(this.counties, this.counties.objects.counties).features)
       .enter().append("path")
-        .attr("fill", (d) => {
-          d = this.rates.get(d.id);
-          if (d) {
-            return this.fill_function(d);
+        .attr("fill", (d, i) => {
+          let rate = this.rates.get(d.id);
+          if (rate) {
+            return this.fill_function(rate);
           } else {
             return "black";
           }
         })
         .attr("d", this.path)
-        .on('click', this.click);
+        .on('click', (d, i)=>{
+          this.dispatcher.call('county_click', this, d, i);
+        });
 
   }
+
+  
+
   resize () {
-    console.log(this)
     this.width = parseInt(this.svg.style("width"), 10);
     this.height = parseInt(this.svg.style("height"), 10);
     this.map.attr("transform", "scale(" + this.width/960* 0.75  + ")");
 
 	}
 
-  click (d, node) {
-    var x, y, k;
-    console.log(d, node);
-    if (d && this.centered !== d) {
-      console.log(this.centered);
-      var centroid = node.path.centroid(d);
-      x = centroid[0];
-      y = centroid[1];
-      k = 4;
-      this.centered = d;
-    } else {
-      x = this.width / 2;
-      y = this.height / 2;
-      k = 1;
-      this.centered = null;
-      console.log(this.centered);
-    }
+  // click (d, node) {
+  //   var x, y, k;
+  //   console.log(d, node);
+  //   if (d && this.centered !== d) {
+  //     console.log(this.centered);
+  //     var centroid = node.path.centroid(d);
+  //     x = centroid[0];
+  //     y = centroid[1];
+  //     k = 4;
+  //     this.centered = d;
+  //   } else {
+  //     x = this.width / 2;
+  //     y = this.height / 2;
+  //     k = 1;
+  //     this.centered = null;
+  //     console.log(this.centered);
+  //   }
 
 
-  }
+  // }
 
   fill_function (d) {
     let classes = {
@@ -189,7 +197,6 @@ export default class CountyMap {
   }
 
   draw (data) {
-    console.log(data);
     this.counties = data;
     this.map.append("g")
         .attr("class", "states")

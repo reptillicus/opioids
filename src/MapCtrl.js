@@ -11,6 +11,9 @@ export default class MapCtrl {
     this.timestep = 0;
 
     this.map = new CountyMap('#map');
+    this.map.on('county_click', (data, idx)=>{
+      this.data_by_county(data.id);
+    });
     this.loading = true;
 
     this.$http.get('https://d3js.org/us-10m.v1.json').then( (resp) => {
@@ -31,6 +34,20 @@ export default class MapCtrl {
           this.loading = false;
         });
     });
+  }
+
+  data_by_county(county_id) {
+    console.log(county_id);
+    let found = [];
+    this.nested_data.forEach( (year)=> {
+      year.values.forEach((d)=>{
+        if (d.FIPS === county_id) {
+          found.push({year:year.key, death_rate:d.death_rate});
+        }
+      });
+    });
+    console.log(found);
+    this.county_by_year = found;
   }
 
   stop_animation () {
