@@ -23,14 +23,14 @@ export default class MapCtrl {
         })
         .get( (data) => {
           let nested = d3.nest()
-            .key((d) => {return +d.Year})
+            .key((d) => {return +d.Year;})
             .entries(data);
           this.nested_data = nested;
-          console.log(this.nested_data)
+          console.log(this.nested_data);
           this.start_animation();
           this.loading = false;
         });
-    })
+    });
   }
 
   stop_animation () {
@@ -51,7 +51,7 @@ export default class MapCtrl {
   }
 
   toggle_play () {
-    console.log("toggle")
+    console.log("toggle");
     this.play ? this.stop_animation() : this.start_animation();
   }
 

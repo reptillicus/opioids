@@ -21,7 +21,7 @@ export default class CountyMap {
       "rgb(185, 0, 70)",
       "rgb(209, 0, 46)",
        "rgb(232, 0, 23)"
-     ]
+    ];
     this.categories = [
       ">20",
       "18.1-20",
@@ -34,7 +34,11 @@ export default class CountyMap {
       "4.1-6",
       "2.1-4",
       "0-2",
-    ]
+    ];
+
+    d3.select(window)
+    		.on("resize", this.resize);
+
 
     // window.addEventListener('resize',()=> {
     //   console.log("resize");
@@ -46,7 +50,12 @@ export default class CountyMap {
 
     this.rates = d3.map();
 
+    this.projection = d3.geoAlbersUsa().scale(1000);
+    // console.log(this.projection)
+    // debugger
+
     this.path = d3.geoPath();
+    // this.path = d3.geoPath();
 
     this.x = d3.scaleLinear()
         .domain([0, 10])
@@ -66,7 +75,7 @@ export default class CountyMap {
     this.bars = this.legend.selectAll(".legend-box")
       .data(this.colors)
       .enter()
-        .append("g")
+        .append("g");
 
     this.bars.append("rect")
           .attr("height", 25)
@@ -79,7 +88,7 @@ export default class CountyMap {
     this.bars.append("text")
           .attr("x", 30)
           .attr("y", (d, i)=> {return this.x(i) + 18; })
-          .text((d, i) => {return this.categories[i]});
+          .text((d, i) => {return this.categories[i];});
 
     this.legend.append("text")
         .attr("class", "caption")
@@ -97,7 +106,7 @@ export default class CountyMap {
 
     this.map = this.svg.append("g")
       .attr('class', "map-container")
-      .attr('width', this.width);
+      .attr("transform", "scale(" + this.width/960* 0.75  + ")");
 
   }
 
@@ -113,8 +122,8 @@ export default class CountyMap {
       .attr('class', 'map-title').text(data.key);
     this.county_values.forEach( (d) => {
       this.rates.set(d.FIPS, d);
-    })
-    this.map.selectAll('.counties').remove()
+    });
+    this.map.selectAll('.counties').remove();
 
     this.map.append("g")
       .attr("class", "counties")
@@ -122,9 +131,9 @@ export default class CountyMap {
     .data(topojson.feature(this.counties, this.counties.objects.counties).features)
       .enter().append("path")
         .attr("fill", (d) => {
-          d = this.rates.get(d.id)
+          d = this.rates.get(d.id);
           if (d) {
-            return this.fill_function(d)
+            return this.fill_function(d);
           } else {
             return "black";
           }
@@ -133,12 +142,19 @@ export default class CountyMap {
         .on('click', this.click);
 
   }
+  resize () {
+    console.log(this)
+    this.width = parseInt(this.svg.style("width"), 10);
+    this.height = parseInt(this.svg.style("height"), 10);
+    this.map.attr("transform", "scale(" + this.width/960* 0.75  + ")");
+
+	}
 
   click (d, node) {
     var x, y, k;
-    console.log(d, node)
+    console.log(d, node);
     if (d && this.centered !== d) {
-      console.log(this.centered)
+      console.log(this.centered);
       var centroid = node.path.centroid(d);
       x = centroid[0];
       y = centroid[1];
@@ -149,13 +165,10 @@ export default class CountyMap {
       y = this.height / 2;
       k = 1;
       this.centered = null;
-      console.log(this.centered)
+      console.log(this.centered);
     }
 
-    this.map.transition()
-      .duration(750)
-      .attr("transform", "translate(" + this.width / 2 + "," + this.height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
-      .style("stroke-width", 1.5 / k + "px");
+
   }
 
   fill_function (d) {
@@ -171,12 +184,12 @@ export default class CountyMap {
       "16.1-18":      "rgb(185, 0, 70)",
       "18.1-20":      "rgb(209, 0, 46)",
       ">20":        "rgb(232, 0, 23)"
-    }
+    };
     return classes[d.death_rate];
   }
 
   draw (data) {
-    console.log(data)
+    console.log(data);
     this.counties = data;
     this.map.append("g")
         .attr("class", "states")
@@ -184,7 +197,8 @@ export default class CountyMap {
       .data(topojson.feature(data, data.objects.counties).features)
       .enter().append("path")
         .attr("d", this.path)
-        .attr("id", (d) => { return 'county_' + d.id})
+        .attr("id", (d) => { return 'county_' + d.id;});
+
     this.map.append("path")
         .datum(topojson.mesh(data, data.objects.states, (a, b) => { return a !== b; }))
         .attr("class", "states")

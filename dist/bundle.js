@@ -214,6 +214,8 @@ var CountyMap = function () {
     this.colors = ["rgb(0, 0, 255)", "rgb(23, 0, 232)", "rgb(46, 0, 209)", "rgb(70, 0, 185)", "rgb(93, 0, 162)", "rgb(116, 0, 139)", "rgb(139, 0, 116)", "rgb(162, 0, 93)", "rgb(185, 0, 70)", "rgb(209, 0, 46)", "rgb(232, 0, 23)"];
     this.categories = [">20", "18.1-20", "16.1-18", "14.1-16", "12.1-14", "10.1-12", "8.1-10", "6.1-8", "4.1-6", "2.1-4", "0-2"];
 
+    d3.select(window).on("resize", this.resize);
+
     // window.addEventListener('resize',()=> {
     //   console.log("resize");
     //   this.width = parseInt(this.svg.style("width"), 10);
@@ -224,7 +226,12 @@ var CountyMap = function () {
 
     this.rates = d3.map();
 
+    this.projection = d3.geoAlbersUsa().scale(1000);
+    // console.log(this.projection)
+    // debugger
+
     this.path = d3.geoPath();
+    // this.path = d3.geoPath();
 
     this.x = d3.scaleLinear().domain([0, 10]).rangeRound([0, 300]);
     this.color = d3.scaleThreshold().domain(d3.range(0, 10)).range(this.colors.reverse());
@@ -251,7 +258,7 @@ var CountyMap = function () {
 
     this.title = this.svg.append("g").attr("class", "map_title").attr("transform", "translate(" + String(this.width / 2) + ",30)");
 
-    this.map = this.svg.append("g").attr('class', "map-container").attr('width', this.width);
+    this.map = this.svg.append("g").attr('class', "map-container").attr("transform", "scale(" + this.width / 960 * 0.75 + ")");
   }
 
   _createClass(CountyMap, [{
@@ -283,6 +290,14 @@ var CountyMap = function () {
       }).attr("d", this.path).on('click', this.click);
     }
   }, {
+    key: 'resize',
+    value: function resize() {
+      console.log(this);
+      this.width = parseInt(this.svg.style("width"), 10);
+      this.height = parseInt(this.svg.style("height"), 10);
+      this.map.attr("transform", "scale(" + this.width / 960 * 0.75 + ")");
+    }
+  }, {
     key: 'click',
     value: function click(d, node) {
       var x, y, k;
@@ -301,8 +316,6 @@ var CountyMap = function () {
         this.centered = null;
         console.log(this.centered);
       }
-
-      this.map.transition().duration(750).attr("transform", "translate(" + this.width / 2 + "," + this.height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")").style("stroke-width", 1.5 / k + "px");
     }
   }, {
     key: 'fill_function',
@@ -330,6 +343,7 @@ var CountyMap = function () {
       this.map.append("g").attr("class", "states").selectAll("path").data(topojson.feature(data, data.objects.counties).features).enter().append("path").attr("d", this.path).attr("id", function (d) {
         return 'county_' + d.id;
       });
+
       this.map.append("path").datum(topojson.mesh(data, data.objects.states, function (a, b) {
         return a !== b;
       })).attr("class", "states").attr("d", this.path);
