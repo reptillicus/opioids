@@ -13,7 +13,7 @@ export default class MapCtrl {
 
     this.map = new CountyMap('#map');
     this.map.on('county_click', (data, idx)=>{
-      this.data_by_county(data.id);
+      this.data_by_county(data);
     });
     this.loading = true;
 
@@ -30,25 +30,24 @@ export default class MapCtrl {
             .key((d) => {return +d.Year;})
             .entries(data);
           this.nested_data = nested;
-          console.log(this.nested_data);
           this.start_animation();
           this.loading = false;
         });
     });
   }
 
-  data_by_county(county_id) {
-    console.log(county_id);
+  data_by_county(county) {
+
     let found = [];
     this.nested_data.forEach( (year)=> {
       year.values.forEach((d)=>{
-        if (d.FIPS === county_id) {
-          found.push({year:year.key, death_rate:d.death_rate});
+        if (d.FIPS === county.id) {
+          found.push({year:year.key, death_rate:d.death_rate, county:d.County});
         }
       });
     });
-    console.log(found);
     this.county_by_year = found;
+    this.selected_county = county;
     this.$scope.$apply();
   }
 

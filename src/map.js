@@ -7,7 +7,9 @@ export default class CountyMap {
     this.element_id = element_id;
     this.svg = d3.select(element_id);
     this.width = parseInt(this.svg.style("width"), 10);
-    this.height = parseInt(this.svg.style("height"), 10);
+    this.height = 600 / 960 * this.width * 0.75;
+    this.svg.style({"height": this.height});
+    this.svg.attr("height", this.height)
     this.centered = null;
     this.colors = [
       "rgb(0, 0, 255)",
@@ -67,9 +69,6 @@ export default class CountyMap {
         .attr("class", "key")
         .attr("transform", "translate(" + this.width*0.80 +",50)");
 
-    this.chart = this.svg.append("g")
-            .attr("class", "chart")
-            .attr("transform", "translate(" + this.width*0.80 +"," + this.height-200 +')');
 
     this.bars = this.legend.selectAll(".legend-box")
       .data(this.colors)
@@ -149,7 +148,7 @@ export default class CountyMap {
 
   }
 
-  
+
 
   resize () {
     this.width = parseInt(this.svg.style("width"), 10);

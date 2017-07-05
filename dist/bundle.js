@@ -123,7 +123,7 @@ var MapCtrl = function () {
 
     this.map = new _map2.default('#map');
     this.map.on('county_click', function (data, idx) {
-      _this.data_by_county(data.id);
+      _this.data_by_county(data);
     });
     this.loading = true;
 
@@ -138,7 +138,6 @@ var MapCtrl = function () {
           return +d.Year;
         }).entries(data);
         _this.nested_data = nested;
-        console.log(_this.nested_data);
         _this.start_animation();
         _this.loading = false;
       });
@@ -147,18 +146,18 @@ var MapCtrl = function () {
 
   _createClass(MapCtrl, [{
     key: "data_by_county",
-    value: function data_by_county(county_id) {
-      console.log(county_id);
+    value: function data_by_county(county) {
+
       var found = [];
       this.nested_data.forEach(function (year) {
         year.values.forEach(function (d) {
-          if (d.FIPS === county_id) {
-            found.push({ year: year.key, death_rate: d.death_rate });
+          if (d.FIPS === county.id) {
+            found.push({ year: year.key, death_rate: d.death_rate, county: d.County });
           }
         });
       });
-      console.log(found);
       this.county_by_year = found;
+      this.selected_county = county;
       this.$scope.$apply();
     }
   }, {
@@ -229,7 +228,9 @@ var CountyMap = function () {
     this.element_id = element_id;
     this.svg = d3.select(element_id);
     this.width = parseInt(this.svg.style("width"), 10);
-    this.height = parseInt(this.svg.style("height"), 10);
+    this.height = 600 / 960 * this.width * 0.75;
+    this.svg.style({ "height": this.height });
+    this.svg.attr("height", this.height);
     this.centered = null;
     this.colors = ["rgb(0, 0, 255)", "rgb(23, 0, 232)", "rgb(46, 0, 209)", "rgb(70, 0, 185)", "rgb(93, 0, 162)", "rgb(116, 0, 139)", "rgb(139, 0, 116)", "rgb(162, 0, 93)", "rgb(185, 0, 70)", "rgb(209, 0, 46)", "rgb(232, 0, 23)"];
     this.categories = [">20", "18.1-20", "16.1-18", "14.1-16", "12.1-14", "10.1-12", "8.1-10", "6.1-8", "4.1-6", "2.1-4", "0-2"];
@@ -258,8 +259,6 @@ var CountyMap = function () {
     this.color = d3.scaleThreshold().domain(d3.range(0, 10)).range(this.colors.reverse());
 
     this.legend = this.svg.append("g").attr("class", "key").attr("transform", "translate(" + this.width * 0.80 + ",50)");
-
-    this.chart = this.svg.append("g").attr("class", "chart").attr("transform", "translate(" + this.width * 0.80 + "," + this.height - 200 + ')');
 
     this.bars = this.legend.selectAll(".legend-box").data(this.colors).enter().append("g");
 
@@ -407,7 +406,6 @@ var _MapCtrl2 = _interopRequireDefault(_MapCtrl);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-console.log(_MapCtrl2.default);
 var app = _angular2.default.module("app", ["ui.router"]);
 
 app.config(["$stateProvider", "$locationProvider", function ($stateProvider, $locationProvider) {

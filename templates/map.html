@@ -27,14 +27,20 @@
     <div class="col-md-3 col-md-offset-6">
       <div id="info">
         <a href="https://blogs.cdc.gov/nchs-data-visualization/drug-poisoning-mortality/"> Data from CDC </a>
+        <p> Click on a county to view data </p>
       </div>
 
     </div>
   </div>
-  
+
   <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-6" ng-show="vm.county_by_year">
+      <h2> {{vm.county_by_year[0].county}} </h2>
       <table class="table">
+        <tr>
+          <th> Year </th>
+          <th> Death Rate </th>
+        </tr>
         <tr ng-repeat="row in vm.county_by_year">
           <td> {{ row.year }} </td>
           <td> {{ row.death_rate }} </td>
