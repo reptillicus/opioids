@@ -60,7 +60,7 @@ export default class CountyMap {
 
     this.x = d3.scaleLinear()
         .domain([0, 10])
-        .rangeRound([0, 300]);
+        .rangeRound([0, this.height*0.8]);
     this.color = d3.scaleThreshold()
         .domain(d3.range(0, 10))
         .range(this.colors.reverse());
@@ -76,16 +76,16 @@ export default class CountyMap {
         .append("g");
 
     this.bars.append("rect")
-          .attr("height", 25)
+          .attr("height", this.height*0.8 / 10)
           .attr("class", "legend-box")
           .attr("y", (d, i)=> { return this.x(i); })
           .attr("x", 0)
-          .attr("width", 25 )
+          .attr("width", this.height*0.8 / 10 )
           .attr("fill", (d, i)=> { return this.color(i); });
 
     this.bars.append("text")
-          .attr("x", 30)
-          .attr("y", (d, i)=> {return this.x(i) + 18; })
+          .attr("x", this.height*0.8 / 10 + 5)
+          .attr("y", (d, i)=> {return this.x(i) + this.height*0.8 / 10 / 2 + 5; })
           .text((d, i) => {return this.categories[i];});
 
     this.legend.append("text")

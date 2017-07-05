@@ -38,6 +38,6 @@ text {
   padding-bottom: 10px;
 }
 
-#legend {
-  height: 50vh !important;
+.key {
+  font-size:1.5em;
 }

@@ -255,21 +255,21 @@ var CountyMap = function () {
     this.path = d3.geoPath();
     // this.path = d3.geoPath();
 
-    this.x = d3.scaleLinear().domain([0, 10]).rangeRound([0, 300]);
+    this.x = d3.scaleLinear().domain([0, 10]).rangeRound([0, this.height * 0.8]);
     this.color = d3.scaleThreshold().domain(d3.range(0, 10)).range(this.colors.reverse());
 
     this.legend = this.svg.append("g").attr("class", "key").attr("transform", "translate(" + this.width * 0.80 + ",50)");
 
     this.bars = this.legend.selectAll(".legend-box").data(this.colors).enter().append("g");
 
-    this.bars.append("rect").attr("height", 25).attr("class", "legend-box").attr("y", function (d, i) {
+    this.bars.append("rect").attr("height", this.height * 0.8 / 10).attr("class", "legend-box").attr("y", function (d, i) {
       return _this.x(i);
-    }).attr("x", 0).attr("width", 25).attr("fill", function (d, i) {
+    }).attr("x", 0).attr("width", this.height * 0.8 / 10).attr("fill", function (d, i) {
       return _this.color(i);
     });
 
-    this.bars.append("text").attr("x", 30).attr("y", function (d, i) {
-      return _this.x(i) + 18;
+    this.bars.append("text").attr("x", this.height * 0.8 / 10 + 5).attr("y", function (d, i) {
+      return _this.x(i) + _this.height * 0.8 / 10 / 2 + 5;
     }).text(function (d, i) {
       return _this.categories[i];
     });
